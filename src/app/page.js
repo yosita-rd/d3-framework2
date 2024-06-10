@@ -2,112 +2,25 @@
 
 import * as d3 from 'd3';
 import { useRef, useEffect } from 'react';
+import { GeoJson } from '../app/data';
 
 export default function Home() {
   const svgRef = useRef(null);
-
-  //geographic data from geojson.org.
-  //use pixel scale from figma
-  const GeoJson = {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        properties: {
-          name: 'Zone1',
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [291, 490.56],
-              [320.5, 329.5],
-              [430, 209.5],
-              [583.87, 182.17],
-              [583.87, 490.56],
-              [291, 490.56],
-            ],
-          ],
-        },
-      },
-      {
-        type: 'Feature',
-        properties: {
-          name: 'Zone2',
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [291, 490.56],
-              [583.87, 490.56],
-              [583.87, 613.35],
-              [291, 613.35],
-              [291, 490.56],
-            ],
-          ],
-        },
-      },
-      {
-        type: 'Feature',
-        properties: {
-          name: 'Zone3',
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [583.87, 384.7],
-              [583.87, 137],
-              [1133, 137],
-              [1102, 260.85],
-              [1243, 260.85],
-              [1243, 384.7],
-              [583.87, 384.7],
-            ],
-          ],
-        },
-      },
-      {
-        type: 'Feature',
-        properties: {
-          name: 'Zone4',
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [583.87, 384.7],
-              [1006.59, 384.7],
-              [1006.59, 688.86],
-              [790.5, 688.86],
-              [583.87, 613.35],
-              [583.87, 384.7],
-            ],
-          ],
-        },
-      },
-      {
-        type: 'Feature',
-        properties: {
-          name: 'Zone5',
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [1006.59, 688.86],
-              [1006.59, 384.7],
-              [1243, 384.7],
-              [1006.59, 688.86],
-            ],
-          ],
-        },
-      },
-    ],
+  const colorGenerator = (report) => {
+    if (report.danger.length > 0) {
+      let light = 255 - report.danger.length * 25;
+      if (light < 104) light = 104;
+      return `rgb(255, ${light}, ${light})`;
+    } else if (report.warning.length > 0) {
+      let light = 255 - report.warning.length * 10;
+      if (light < 104) light = 104;
+      return `rgb(255, ${light}, ${light - 70})`;
+    } else {
+      return 'rgb(215, 215, 215)';
+    }
   };
 
-  //projection geo data -> x, y
+  //projection geo data -> x, y -> svg path
   useEffect(() => {
     const svg = d3.select(svgRef.current);
 
@@ -120,7 +33,7 @@ export default function Home() {
       .data(GeoJson.features)
       .join('path')
       .attr('d', path)
-      .attr('fill', 'none')
+      .attr('fill', (d) => colorGenerator(d.properties.report)) //d is the data from GeoJson.features
       .attr('stroke', 'black');
   }, [GeoJson]);
 
