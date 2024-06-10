@@ -19,6 +19,7 @@ export default function Home() {
       return 'rgb(215, 215, 215)';
     }
   };
+  //not working yet
   const zoneAlert = (zone) => {
     const polygon = zone.geometry;
     if (d3.geoContains(polygon, currentLocation)) {
@@ -41,9 +42,9 @@ export default function Home() {
   useEffect(() => {
     const svg = d3.select(svgRef.current);
 
-    const projection = d3.geoIdentity().fitSize([960, 500], GeoJson);
+    const projection = d3.geoIdentity().scale(100).fitSize([960, 500], GeoJson);
 
-    const path = d3.geoPath().projection(projection);
+    const path = d3.geoPath(projection);
 
     svg
       .selectAll('path')
