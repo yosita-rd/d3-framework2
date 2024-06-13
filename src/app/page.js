@@ -22,23 +22,13 @@ export default function Home() {
     }
   };
 
-  // //not working yet
-  // const zoneAlert = (zone) => {
-  //   const polygon = zone.geometry;
-  //   if (d3.geoContains(polygon, currentLocation)) {
-  //     return 'red';
-  //   } else {
-  //     return 'black';
-  //   }
-  // };
-
   //generate random location every 2 seconds
   const [currentLocation, setCurrentLocation] = useState([0, 0]);
   useEffect(() => {
     const interval = setInterval(() => {
       let location = [
-        Math.floor(Math.random() * 952),
-        Math.floor(Math.random() * 551.86),
+        Math.floor(Math.random() * width),
+        Math.floor(Math.random() * height),
       ];
       setCurrentLocation(location);
     }, 2000);
@@ -47,12 +37,14 @@ export default function Home() {
   }, []);
 
   //draw the map
+  const width = 952;
+  const height = 551.86;
+  const [scale, setScale] = useState(1);
   useEffect(() => {
     const svg = d3.select(svgRef.current);
     const projection = d3
       .geoIdentity()
-      .scale(100)
-      .fitSize([952, 551.86], GeoJson);
+      .fitSize([width * scale, height * scale], GeoJson);
     const path = d3.geoPath(projection);
 
     svg
@@ -66,12 +58,29 @@ export default function Home() {
     // Append the circle once at [0,0] and hide it
     const circle = svg
       .append('circle')
-      .attr('r', 10)
+      .attr('r', 10 * scale)
       .attr('cx', 0)
       .attr('cy', 0)
       .attr('fill', 'blue')
       .attr('hidden', 'true');
   }, []);
+
+  useEffect(() => {
+    const svg = d3.select(svgRef.current);
+    const projection = d3
+      .geoIdentity()
+      .fitSize([width * scale, height * scale], GeoJson);
+    const path = d3.geoPath(projection);
+
+    svg
+      .selectAll('path')
+      .join('path')
+      .attr('d', path)
+      .attr('fill', (d) => colorGenerator(d.properties.report));
+
+    const circle = svg.select('circle');
+    circle.attr('r', 10 * scale);
+  }, [scale]);
 
   //update the map(fill) and circle every 2 seconds
   useEffect(() => {
@@ -87,18 +96,39 @@ export default function Home() {
     circle
       .transition()
       .duration(2000)
-      .attr('cx', currentLocation[0])
-      .attr('cy', currentLocation[1]);
+      .attr('cx', currentLocation[0] * scale)
+      .attr('cy', currentLocation[1] * scale);
   }, [currentLocation]);
 
   return (
-    <main className="flex flex-row flex-wrap justify-center gap-4 bg-stone-200 min-h-screen p-24">
+    <main>
       <p>Current Location: {currentLocation.join(', ')}</p>
+      <p>Scale: 1px = {scale}m</p>
+      <button
+        className="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-1 px-2 rounded text-sm"
+        onClick={() =>
+          setScale(
+            (prevScale) => Math.round(Math.max(prevScale + 0.2, 0.2) * 10) / 10
+          )
+        }
+      >
+        Zoom In
+      </button>
+      <button
+        className="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-1 px-2 rounded text-sm"
+        onClick={() =>
+          setScale(
+            (prevScale) => Math.round(Math.max(prevScale - 0.2, 0.2) * 10) / 10
+          )
+        }
+      >
+        Zoom Out
+      </button>
       <svg
         ref={svgRef}
-        width="952"
-        height="551.86"
-        viewBox="0 0 952 551.86"
+        width={width * scale}
+        height={height * scale}
+        viewBox={`0 0 ${width * scale} ${height * scale}`}
       ></svg>
     </main>
   );
